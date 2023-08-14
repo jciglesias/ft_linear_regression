@@ -1,0 +1,1 @@
+thetafile = "theta.npy"
