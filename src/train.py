@@ -9,14 +9,19 @@ import csv
 import numpy as np
 
 
-def normalize(milage: np.ndarray, pos) -> float:
-    return (milage[pos] - milage.min()) / (milage.max()- milage.min())
+def normalize(milage: np.ndarray) -> np.ndarray:
+    return (milage - milage.min()) / (milage.max()- milage.min())
+
+def pred_error(theta, milage, pos, price) -> float:
+    return estimate_price(theta, milage) - price
 
 def get_theta(theta, milage: np.ndarray, price, pos) -> list:
     if pos > 0:
         theta = get_theta(theta, milage, price, pos - 1)
-    theta[0] += estimate_price(theta, normalize(milage, pos)) - price[pos]
-    theta[1] += (estimate_price(theta, normalize(milage, pos)) - price[pos]) * normalize(milage, pos)
+    # theta[0] -= lrate * tmp[0] / size
+    # theta[1] -= lrate * tmp[1] / size
+    theta[0] -= lrate * np.sum(pred_error(theta, milage[:pos], pos, price[:pos])) / (pos + 1)
+    theta[1] -= lrate * np.sum(pred_error(theta, milage[:pos], pos, price[:pos]) * milage[:pos]) / (pos + 1)
 
     # for i in range(milage.size):
     #     theta[0] += estimate_price(theta, normalize(milage, i)) - price[i]
@@ -38,7 +43,7 @@ if __name__=="__main__":
             # tmp[1] += (estimate_price(theta, milage[size]) - price[size]) * milage[size]
             size += 1
     # theta[1], theta[0] =  np.polyfit(milage, price, 1)
-    # tmp = get_theta(tmp, np.array(milage), np.array(price), size - 1)
+    # theta = get_theta(tmp, normalize(np.array(milage)), np.array(price), size - 1)
     # theta[0] -= lrate * tmp[0] / size
     # theta[1] -= lrate * tmp[1] / size
     theta[1] = (size * sum([milage[i] * price[i] for i in range(size)]) - (sum(milage) * sum(price))) / (size * sum([milage[i] * milage[i] for i in range(size)]) - (sum(milage) * sum(milage)))
