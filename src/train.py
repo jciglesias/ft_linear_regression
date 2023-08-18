@@ -12,13 +12,18 @@ import numpy as np
 def normalize(milage: np.ndarray) -> np.ndarray:
     return (milage - milage.min()) / (milage.max()- milage.min())
 
+# def norm_ret(arg: np.ndarray):
+#     return arg * (arg.max() - arg.min()) + arg.min()
+
 def pred_error(theta, milage, price) -> float:
     return estimate_price(theta, milage) - price
 
-def get_theta(theta, milage: np.ndarray, price, size) -> list:
-    theta[0] -= lrate * np.sum(pred_error(theta, milage, price)) / size
-    theta[1] -= lrate * np.sum(pred_error(theta, milage, price) * milage) / size
-    return theta
+def get_theta(theta, milage: np.ndarray, price: np.ndarray, size: int) -> list:
+    tmp = theta
+    tmp[0] -= lrate * np.sum(pred_error(theta, milage, price)) / size
+    tmp[1] -= lrate * np.sum(pred_error(theta, milage, price) * milage) / size
+    # print(tmp)
+    return tmp
 
 if __name__=="__main__":
     milage, price = [],[]
@@ -29,12 +34,17 @@ if __name__=="__main__":
         for row in spamreader:
             milage.append(int(row["km"]))
             price.append(int(row["price"]))
+    milage = np.array(milage)
+    price = np.array(price)
+    theta[1] = (milage.size * np.sum(milage * price) - (np.sum(milage) * np.sum(price))) / (milage.size * np.sum(milage * milage) - (np.sum(milage) * np.sum(milage)))
+    theta[0] = (np.sum(price) - theta[1] * np.sum(milage)) / milage.size
+    tmp = estimate_price(theta, normalize(milage))
+    # theta = [0,0]
     for _ in range(epoch):
-        theta = get_theta(theta, normalize(np.array(milage)), np.array(price), len(milage))
-    # theta[1] = (size * sum([milage[i] * price[i] for i in range(size)]) - (sum(milage) * sum(price))) / (size * sum([milage[i] * milage[i] for i in range(size)]) - (sum(milage) * sum(milage)))
-    # theta[0] = (sum(price) - theta[1] * sum(milage)) / size
+        theta = get_theta(theta, normalize(milage), tmp, milage.size)
+    # theta[1] = (np.sum(price) - (theta[0] * milage.size)) / np.sum(milage)
     print(f"{theta[0]:.2f}, {theta[1]:.2f}")
     # pyplot.scatter(milage, price)
-    # pyplot.plot(milage, estimate_price(theta, np.array(milage)))
+    # pyplot.plot(milage, estimate_price(theta, milage))
     # pyplot.show()
     np.save(thetafile, theta)
