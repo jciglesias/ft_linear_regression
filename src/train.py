@@ -30,10 +30,4 @@ if __name__=="__main__":
     price = np.array(price)
     for _ in range(epoch):
         theta = get_theta(theta, normalize(milage), normalize_price(price, milage), milage.size)
-    # print(price.mean())
-    r2 = 1 - (np.sum((price - estimate_price(theta, milage))**2) / np.sum(((price - price.mean()))**2))
-    print(f"Precision = {r2 * 100:.2f}%")
-    pyplot.scatter(milage, price)
-    pyplot.plot(milage, estimate_price(theta, milage), color="green")
-    pyplot.show()
     np.save(thetafile, theta)
